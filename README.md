@@ -120,6 +120,20 @@ Question and Answer summary and reasoning
 
   attention模型最开始是用于翻译，但是现在也在其他应用中被广泛使用。
 
+  attention主要有两种形式，主要区别在于attention scores计算方法不一样：
+  
+  - Bahdanau Attention
+      $$
+      Va^T * tanh(W_1 * h_s + W_2 * h_t)
+      $$
+      其中$V_a$和$W_1$和$W_2$都是神经网络参数，而$h_t$是Decoder的hidden，$h_s$是Encoder的输出
+  
+  - Luong Attention
+      $$
+      h_t^T * W * hs
+      $$
+      其中$W$是神经网络参数，$h_t$是Decoder的hidden，$h_s$是Encoder的输出
+  
 - baseline seq2seq模型中存在的问题：
     - 无法准确地再现文章的事实细节
     - 无法解决摘要中的未登录词（OOV）问题
@@ -131,6 +145,7 @@ Question and Answer summary and reasoning
     可以用Coverage算法优化该问题
   - 大量的OOV的出现（word embedding中没有的词）
     可以用pointer-generator network优化该问题，结合了抽取式和生成式的优点
+  
 - 测试模型
   用评估算法评估模型的好坏，传统方法是BLEU分数
 

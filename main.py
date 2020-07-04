@@ -127,16 +127,20 @@ def process_original_dataset_and_save2file():
     # Get all words's frequency
     # and remove lower freq words (do not need)
     cleaned_words = []
-    with open(word_freq_path, 'w', encoding='utf-8') as writer:
+    # when using writelines method to write something to file, the argument newline=''
+    # should be added, otherwise there will exit new blank line between every writen line,
+    # and it may result in error when read this file.
+    with open(word_freq_path, 'w', newline='', encoding='utf-8') as writer:
         for word, freq in collections.Counter(words).items():
             writer.writelines([str(word), ',', str(freq), '\n'])
             if freq >= freq_threshold and '' != word:
                 cleaned_words.append(word)
         writer.close()
 
-    word2index_writer = csv.writer(open(word2index_path, 'w', encoding='utf-8'))
-    index2word_writer = csv.writer(open(index2word_path, 'w', encoding='utf-8'))
+    word2index_writer = csv.writer(open(word2index_path, 'w', newline='', encoding='utf-8'))
+    index2word_writer = csv.writer(open(index2word_path, 'w', newline='', encoding='utf-8'))
     for index, word in enumerate(cleaned_words):
+        # Please be attention with writerow method like writelines.
         word2index_writer.writerow([word, index])
         index2word_writer.writerow([index, word])
 

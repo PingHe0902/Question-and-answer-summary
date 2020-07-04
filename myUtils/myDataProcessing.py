@@ -4,8 +4,8 @@ from multiprocessing import cpu_count, Pool
 import jieba
 import re
 
-jieba.load_userdict("/home/heping/pycharm/aistudio/project1_auto_master_qa/resource/jieba_dictionary/user_dict.txt")
-#jieba.load_userdict("./resource/jieba_dictionary/user_dict.txt")
+#jieba.load_userdict("/home/heping/pycharm/aistudio/project1_auto_master_qa/resource/jieba_dictionary/user_dict.txt")
+jieba.load_userdict("./resource/jieba_dictionary/user_dict.txt")
 
 
 class MyDataProcessing:
@@ -84,7 +84,7 @@ class MyDataProcessing:
             seg_list = jieba.cut(sentence)
             sentence = [word for word in seg_list if word not in parsed_stop_words]
         sentence = ' '.join(sentence)
-        print(sentence)
+        # print(sentence)
         return sentence
 
     @staticmethod
@@ -196,7 +196,7 @@ class MyDataProcessing:
     @staticmethod
     def get_word2index_from_file(word2index_file_path):
         word2index_data = {}
-        with open(word2index_file_path, 'r') as vocab_reader:
+        with open(word2index_file_path, 'r', encoding='utf-8') as vocab_reader:
             for vocab_line in vocab_reader:
                 word, index = vocab_line.strip().split(',')
                 if '' != word and ' ' != word:
@@ -207,7 +207,7 @@ class MyDataProcessing:
     @staticmethod
     def get_index2word_from_file(index2word_file_path):
         index2word_data = {}
-        with open(index2word_file_path, 'r') as vocab_reader:
+        with open(index2word_file_path, 'r', encoding='utf-8') as vocab_reader:
             for vocab_line in vocab_reader:
                 index, word = vocab_line.strip().split(',')
                 if '' != word and ' ' != word:

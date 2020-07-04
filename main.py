@@ -127,15 +127,15 @@ def process_original_dataset_and_save2file():
     # Get all words's frequency
     # and remove lower freq words (do not need)
     cleaned_words = []
-    with open(word_freq_path, 'w') as writer:
+    with open(word_freq_path, 'w', encoding='utf-8') as writer:
         for word, freq in collections.Counter(words).items():
-            writer.writelines([word, ',', str(freq), '\n'])
+            writer.writelines([str(word), ',', str(freq), '\n'])
             if freq >= freq_threshold and '' != word:
                 cleaned_words.append(word)
         writer.close()
 
-    word2index_writer = csv.writer(open(word2index_path, 'w'))
-    index2word_writer = csv.writer(open(index2word_path, 'w'))
+    word2index_writer = csv.writer(open(word2index_path, 'w', encoding='utf-8'))
+    index2word_writer = csv.writer(open(index2word_path, 'w', encoding='utf-8'))
     for index, word in enumerate(cleaned_words):
         word2index_writer.writerow([word, index])
         index2word_writer.writerow([index, word])
@@ -310,7 +310,7 @@ def save_word_embedding_to_file(word2index, word2vectors, word_embedding_file_pa
 # Return an float data array, whose shape is (vocab_size, vector_size)
 def get_word_embedding_from_file(word_embedding_file_path):
     word_embedding = []
-    with open(word_embedding_file_path) as csv_file:
+    with open(word_embedding_file_path, encoding='utf-8') as csv_file:
         csv_reader = csv.reader(csv_file, delimiter='\n')
         for row in csv_reader:
             word_embedding.append([float(s) for s in row[0].split(',')])
@@ -559,7 +559,7 @@ def evaluate_seq2seq_model(seq2seq_model, word2index, index2word, predict_max_le
             return -1
         predict_sentence = MyDataProcessing.convert_sequence2sentence(sequence=predict_sequence, index2word=index2word)
         predict_sentences_list.append(predict_sentence)
-    with open(result_path, 'w', newline='') as writer:
+    with open(result_path, 'w', newline='', encoding='utf-8') as writer:
         writer.writelines(['QID', ',', 'Prediction', '\n'])
         for num, sentence in enumerate(predict_sentences_list):
             writer.writelines(['Q' + str(num + 1), ',', sentence, '\n'])
@@ -619,10 +619,10 @@ def main():
     start_answer(input_sentence,
                  load_existed_seq2seq=False,
                  based_trained_seq2seq=False,
-                 process_original_dataset=False,
-                 need_train_word2vector=False,
+                 process_original_dataset=True,
+                 need_train_word2vector=True,
                  need_draw_t_sne=False,
-                 predict_algorithm='beam',
+                 predict_algorithm='greedy',
                  predict_result=True,
                  test_mode=False)
 

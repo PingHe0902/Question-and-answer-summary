@@ -133,6 +133,7 @@ class BahdananAttention(tf.keras.Model):
 class PointerGenerationNetwork(tf.keras.Model):
 
     def __init__(self):
+        super(PointerGenerationNetwork, self).__init__()
         self.Wh = tf.keras.layers.Dense(1)
         self.Ws = tf.keras.layers.Dense(1)
         self.Wx = tf.keras.layers.Dense(1)

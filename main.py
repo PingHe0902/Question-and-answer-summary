@@ -58,7 +58,7 @@ train_validation_scale = 0.95
 beam_size = 5
 # -------------------------------------------------------
 # other global variables
-font_global = font_manager.FontProperties(fname='./resource/font/font_sample.ttf')
+font_global = font_manager.FontProperties(fname=os.path.normpath('./resource/font/SIMSUN.ttf'))
 # -------------------------------------------------------
 # global class
 myDataProcess = MyDataProcessing(stop_word_file_path='./resource/stopwords/哈工大停用词表.txt',
@@ -106,8 +106,8 @@ def process_original_dataset_and_save2file():
     train_df = MyDataProcessing.parallelize_process(clean_dataframe_process, original_train_df)
     test_df = MyDataProcessing.parallelize_process(clean_dataframe_process, original_test_df)
 
-    train_df.to_csv(cleaned_train_source_path, index=None, header=True)
-    test_df.to_csv(cleaned_test_source_path, index=None, header=True)
+    train_df.to_csv(cleaned_train_source_path, index=False, header=True)
+    test_df.to_csv(cleaned_test_source_path, index=False, header=True)
 
     train_df['merged'] = train_df[['Question', 'Dialogue', 'Report']].apply(lambda x: ' '.join(x), axis=1)
     test_df['merged'] = test_df[['Question', 'Dialogue']].apply(lambda x: ' '.join(x), axis=1)
@@ -115,7 +115,7 @@ def process_original_dataset_and_save2file():
     # concatenate train and test need use train_df[['merged']], because
     # it will return matrix, but train_df['merged'] just return an object
     merged_df = pd.concat([train_df[['merged']], test_df[['merged']]], axis=0)
-    merged_df.to_csv(merged_train_test_path, index=None, header=True)
+    merged_df.to_csv(merged_train_test_path, index=False, header=True)
 
     # Get all words for corpus
     words = []
@@ -167,13 +167,13 @@ def reprocess_dataset_and_file_saved(word2index):
         target_max_len = 40
 
     train_df['Input'] = train_df['Input'].apply(
-        lambda x: MyDataProcessing.pad_sentences(x, max_len=input_max_len, vocab=word2index))
+            lambda x: MyDataProcessing.pad_sentences(x, max_len=input_max_len, vocab=word2index))
     train_df['Target'] = train_df['Target'].apply(
-        lambda x: MyDataProcessing.pad_sentences(x, max_len=target_max_len, vocab=word2index))
+            lambda x: MyDataProcessing.pad_sentences(x, max_len=target_max_len, vocab=word2index))
     test_df['Input'] = test_df['Input'].apply(
-        lambda x: MyDataProcessing.pad_sentences(x, max_len=input_max_len, vocab=word2index))
+            lambda x: MyDataProcessing.pad_sentences(x, max_len=input_max_len, vocab=word2index))
     test_df_no_pad['Input'] = test_df_no_pad['Input'].apply(
-        lambda x: MyDataProcessing.add_start_and_end_to_sentence(x, word2index=word2index))
+            lambda x: MyDataProcessing.add_start_and_end_to_sentence(x, word2index=word2index))
 
     train_df.to_csv(padded_cleaned_train_source_path, columns=['Input', 'Target'], index=None, header=True)
     test_df.to_csv(padded_cleaned_test_source_path, columns=['Input'], index=None, header=True)
@@ -197,8 +197,14 @@ def convert_train_data_to_sequences_and_save_to_file(train_data_path, saved_path
         input_sequence = []
         target_sequence = []
         if isinstance(input_sentences[i], str) and isinstance(target_sentences[i], str):
-            input_sequence = [int(word2index[input_word]) if input_word in word2index.keys() else '<UNK>' for input_word in input_sentences[i].split(' ')]
-            target_sequence = [int(word2index[target_word]) if target_word in word2index.keys() else '<UNK>' for target_word in target_sentences[i].split(' ')]
+            input_sequence = [int(word2index[input_word])
+                              if input_word in word2index.keys()
+                              else '<UNK>'
+                              for input_word in input_sentences[i].split(' ')]
+            target_sequence = [int(word2index[target_word])
+                               if target_word in word2index.keys()
+                               else '<UNK>'
+                               for target_word in target_sentences[i].split(' ')]
         if len(input_sequence) and len(target_sequence) is not 0:
             input_sequences[i, :] = input_sequence
             target_sequences[i, :] = target_sequence
@@ -219,7 +225,10 @@ def convert_test_data_to_sequences_and_save_to_file(test_data_path, saved_path, 
     for i in range(0, sample_size):
         input_sequence = []
         if isinstance(input_sentences[i], str):
-            input_sequence = [int(word2index[input_word]) if input_word in word2index.keys() else '<UNK>' for input_word in input_sentences[i].split(' ')]
+            input_sequence = [int(word2index[input_word])
+                              if input_word in word2index.keys()
+                              else '<UNK>'
+                              for input_word in input_sentences[i].split(' ')]
             input_sequence_array = np.expand_dims(input_sequence, 0)
         if len(input_sequence) is not 0:
             input_sequences_list.append(input_sequence)
@@ -275,14 +284,19 @@ def update_word2vec_model(word2vec_model, use_train_data_path):
     return word2vec_model
 
 
-def draw_word2vec_by_tSNE(word_embedding, index2word, visual_size, fig_size, font, t_sne_path):
-    tSNE = TSNE()
-    embedding_tSNE = tSNE.fit_transform(word_embedding[:visual_size, :])
+def draw_word2vec_by_TSNE(word_embedding,
+                          index2word,
+                          visual_size,
+                          fig_size,
+                          font,
+                          t_sne_path):
+    tsne = TSNE()
+    embedding_t_sne = tsne.fit_transform(word_embedding[:visual_size, :])
     fig, ax = plt.subplots(figsize=(fig_size, fig_size))
     for i in range(visual_size):
-        ax.scatter(*embedding_tSNE[i, :])
+        ax.scatter(*embedding_t_sne[i, :])
         ax.annotate(index2word[i],
-                    (embedding_tSNE[i, 0], embedding_tSNE[i, 1]),
+                    (embedding_t_sne[i, 0], embedding_t_sne[i, 1]),
                     alpha=0.7,
                     fontproperties=font)
     fig.savefig(t_sne_path)
@@ -300,7 +314,9 @@ def get_index2word_from_word2vec_model(word2vec_model):
     return {index: word for index, word in enumerate(word2vec_model.wv.index2word)}
 
 
-def save_word_embedding_to_file(word2index, word2vectors, word_embedding_file_path):
+def save_word_embedding_to_file(word2index,
+                                word2vectors,
+                                word_embedding_file_path):
     word_embedding = []
     for word, index in word2index.items():
         word_embedding.append(word2vectors.wv.get_vector(word))
@@ -378,20 +394,23 @@ def train_seq2seq(seq2seq_model,
             # print("batch of {} target_sequence is: {}".format(batch_number, target_sequence))
             # print("<<<<<<<<<<<<<<")
             if with_attention:
-                batch_loss, train_accuracy = seq2seq_model.train_one_step(input_sequence, target_sequence,
-                                                                          final_batch_size)
+                batch_loss, train_accuracy = seq2seq_model.train_one_step(
+                        input_sequence,
+                        target_sequence,
+                        final_batch_size)
             else:
-                batch_loss, train_accuracy = seq2seq_model.train_one_step_without_attention(input_sequence, target_sequence,
-                                                                                            final_batch_size)
+                batch_loss, train_accuracy = seq2seq_model.train_one_step_without_attention(
+                        input_sequence,
+                        target_sequence,
+                        final_batch_size)
             total_loss += batch_loss
 
             if 0 == (batch_number % 100) and print_batch is True:
                 print("Epoch: {} Batch: {} Loss: {:4f} train accuracy: {:4f}".format(
-                    epoch,
-                    batch_number,
-                    batch_loss.numpy(),
-                    train_accuracy.numpy()
-                ))
+                        epoch,
+                        batch_number,
+                        batch_loss.numpy(),
+                        train_accuracy.numpy()))
 
         if int(validation_input_sequences.shape[0] % batch_size) is 0:
             batch_numbers_v = int(validation_input_sequences.shape[0] / batch_size)
@@ -403,8 +422,10 @@ def train_seq2seq(seq2seq_model,
                 validation_target_sequence = validation_target_sequences[batch_number * batch_size:]
                 validation_final_batch_size = validation_input_sequences.shape[0] - batch_number * batch_size
             else:
-                validation_input_sequence = validation_input_sequences[batch_number * batch_size: (batch_number + 1) * batch_size]
-                validation_target_sequence = validation_target_sequences[batch_number * batch_size: (batch_number + 1) * batch_size]
+                validation_input_sequence = validation_input_sequences[
+                                            batch_number * batch_size: (batch_number + 1) * batch_size]
+                validation_target_sequence = validation_target_sequences[
+                                            batch_number * batch_size: (batch_number + 1) * batch_size]
                 validation_final_batch_size = batch_size
 
             if with_attention:
@@ -421,11 +442,10 @@ def train_seq2seq(seq2seq_model,
             seq2seq_model.save_training_checkpoint()
 
         print("Epoch: {} Average loss: {:4f} train average accuracy: {:4f} validate average accuracy: {:4f}".format(
-            epoch,
-            total_loss / batch_numbers,
-            train_accuracy,
-            validation_accuracy_sum / batch_numbers_v
-        ))
+                epoch,
+                total_loss / batch_numbers,
+                train_accuracy,
+                validation_accuracy_sum / batch_numbers_v))
         print("Time taken for {}th epoch is {} sec".format(epoch, time.time() - start_time))
 
 
@@ -433,14 +453,16 @@ def predict_one_sentence(input_sentence, seq2seq_model, word2index, index2word, 
     input_sequence = MyDataProcessing.convert_sentence2sequence(sentence=input_sentence, word2index=word2index)
     input_sequence = np.expand_dims(input_sequence, 0)
     if predict_algorithm is 'greedy':
-        predict_sequence, attention_weights = seq2seq_model.predict_one_sequence(input_sequence=input_sequence,
-                                                                                 word2index=word2index,
-                                                                                 output_max_len=predict_max_len)
+        predict_sequence, attention_weights = seq2seq_model.predict_one_sequence(
+                input_sequence=input_sequence,
+                word2index=word2index,
+                output_max_len=predict_max_len)
     elif predict_algorithm is 'beam':
-        predict_sequence, attention_weights, k_beam = seq2seq_model.predict_one_sequence_beam_search(input_sequence=input_sequence,
-                                                                                                     word2index=word2index,
-                                                                                                     output_max_len=predict_max_len,
-                                                                                                     k=beam_size)
+        predict_sequence, attention_weights, k_beam = seq2seq_model.predict_one_sequence_beam_search(
+                input_sequence=input_sequence,
+                word2index=word2index,
+                output_max_len=predict_max_len,
+                k=beam_size)
         """
         # print for test
         s1 = k_beam[0][-1]
@@ -455,31 +477,44 @@ def predict_one_sentence(input_sentence, seq2seq_model, word2index, index2word, 
     else:
         print("predict algorithm {} not exists!!!".format(predict_algorithm))
         return -1
-    predict_sentence = MyDataProcessing.convert_sequence2sentence(sequence=predict_sequence, index2word=index2word)
+    predict_sentence = MyDataProcessing.convert_sequence2sentence(sequence=predict_sequence,
+                                                                  index2word=index2word)
     return predict_sentence, attention_weights
 
 
 def train_and_get_word2vector_model(need_train):
     if need_train is True or os.path.exists(word_embedding_path) is False:
-        prebuild_word2vector_model = train_word2vec_model_and_save_to(last_word2vec_model_path, merged_train_test_path)
+        prebuild_word2vector_model = train_word2vec_model_and_save_to(last_word2vec_model_path,
+                                                                      merged_train_test_path)
         # reprocess dataset to make sentences same length and then retrain word2vec model
         prebuild_word2index = MyDataProcessing.get_word2index_from_file(word2index_path)
         reprocess_dataset_and_file_saved(prebuild_word2index)
-        word2vector_model = update_word2vec_model(prebuild_word2vector_model, padded_cleaned_train_source_path)
-        word2vector_model = update_word2vec_model(word2vector_model, padded_cleaned_test_source_path)
+        word2vector_model = update_word2vec_model(prebuild_word2vector_model,
+                                                  padded_cleaned_train_source_path)
+        word2vector_model = update_word2vec_model(word2vector_model,
+                                                  padded_cleaned_test_source_path)
     else:
         word2vector_model = get_word2vec_model_from_file(update_word2vec_model_path)
     print(word2vector_model.wv.most_similar(['坏'], topn=10))
     return word2vector_model
 
 
-def get_word_embedding_and_word2index_and_index2word(word2vector_model, need_draw_t_sne, t_sne_path):
+def get_word_embedding_and_word2index_and_index2word(word2vector_model,
+                                                     need_draw_t_sne,
+                                                     t_sne_path):
     word2index = get_word2index_from_word2vec_model(word2vector_model)
     index2word = get_index2word_from_word2vec_model(word2vector_model)
-    word_embedding = save_word_embedding_to_file(word2index, word2vector_model, word_embedding_path)
+    word_embedding = save_word_embedding_to_file(word2index,
+                                                 word2vector_model,
+                                                 word_embedding_path)
     # word_embedding = get_word_embedding_from_file(word_embedding_path)
     if need_draw_t_sne is True:
-        draw_word2vec_by_tSNE(word_embedding, index2word, visual_size=len(word_embedding), fig_size=200, font=font_global, t_sne_path=t_sne_path)
+        draw_word2vec_by_TSNE(word_embedding,
+                              index2word,
+                              visual_size=len(word_embedding),
+                              fig_size=200,
+                              font=font_global,
+                              t_sne_path=t_sne_path)
     return word_embedding, word2index, index2word
 
 
@@ -490,7 +525,9 @@ def get_model(process_original_dataset=False,
     if process_original_dataset is True:
         process_original_dataset_and_save2file()
     word2vec_model = train_and_get_word2vector_model(need_train_word2vec)
-    word_embedding, word2index, index2word = get_word_embedding_and_word2index_and_index2word(word2vec_model, need_draw_t_sne, t_SNE_path)
+    word_embedding, word2index, index2word = get_word_embedding_and_word2index_and_index2word(word2vec_model,
+                                                                                              need_draw_t_sne,
+                                                                                              t_SNE_path)
 
     '''
     print(word2index['，'])
@@ -502,9 +539,10 @@ def get_model(process_original_dataset=False,
     # print(word_embedding.shape[0])
     # print(len(word2index.keys()))
     # print(len(index2word.keys()))
-    train_input_sequences, train_target_sequences = convert_train_data_to_sequences_and_save_to_file(padded_cleaned_train_source_path,
-                                                                                                     train_sequences_path,
-                                                                                                     word2index)
+    train_input_sequences, train_target_sequences =\
+        convert_train_data_to_sequences_and_save_to_file(padded_cleaned_train_source_path,
+                                                         train_sequences_path,
+                                                         word2index)
     target_max_len = len(train_target_sequences[0])
 
     # retrieve part of input sequences for debug
@@ -520,7 +558,8 @@ def get_model(process_original_dataset=False,
                             cell_type=cell_type,
                             print_batch=print_batch)
 
-    return seq2seq_model, word2index, index2word, word_embedding, train_input_sequences, train_target_sequences, target_max_len
+    return seq2seq_model, word2index, index2word, word_embedding,\
+        train_input_sequences, train_target_sequences, target_max_len
 
 
 def start_train(seq2seq_model,
@@ -550,7 +589,12 @@ def start_train(seq2seq_model,
                       epoch_numbers=epoch_counts)
 
 
-def get_model_and_predict(input_sentence, seq2seq_model, word2index, index2word, predict_max_len, predict_algorithm):
+def get_model_and_predict(input_sentence,
+                          seq2seq_model,
+                          word2index,
+                          index2word,
+                          predict_max_len,
+                          predict_algorithm):
     # load trained latest checkpoint file
     seq2seq_model.load_trained_checkpoint()
 
@@ -563,25 +607,38 @@ def get_model_and_predict(input_sentence, seq2seq_model, word2index, index2word,
     return predict_sentence, attention_weights
 
 
-def evaluate_seq2seq_model(seq2seq_model, word2index, index2word, predict_max_len, predict_algorithm, test_data_path, save_test_sequences_path, result_path, test_mode):
-    test_input_sequences_list = convert_test_data_to_sequences_and_save_to_file(test_data_path, save_test_sequences_path, word2index)
+def evaluate_seq2seq_model(seq2seq_model,
+                           word2index,
+                           index2word,
+                           predict_max_len,
+                           predict_algorithm,
+                           test_data_path,
+                           save_test_sequences_path,
+                           result_path,
+                           test_mode):
+    test_input_sequences_list = convert_test_data_to_sequences_and_save_to_file(test_data_path,
+                                                                                save_test_sequences_path,
+                                                                                word2index)
     predict_sentences_list = []
     if test_mode is True:
         test_input_sequences_list = test_input_sequences_list[:3]
     for input_sequence_index in range(len(test_input_sequences_list)):
         if predict_algorithm is 'greedy':
-            predict_sequence, attention_weights = seq2seq_model.predict_one_sequence(input_sequence=test_input_sequences_list[input_sequence_index],
-                                                                                     word2index=word2index,
-                                                                                     output_max_len=predict_max_len)
+            predict_sequence, attention_weights = seq2seq_model.predict_one_sequence(
+                    input_sequence=test_input_sequences_list[input_sequence_index],
+                    word2index=word2index,
+                    output_max_len=predict_max_len)
         elif predict_algorithm is 'beam':
-            predict_sequence, attention_weights, k_beam = seq2seq_model.predict_one_sequence_beam_search(input_sequence=test_input_sequences_list[input_sequence_index],
-                                                                                                         word2index=word2index,
-                                                                                                         output_max_len=predict_max_len,
-                                                                                                         k=beam_size)
+            predict_sequence, attention_weights, k_beam = seq2seq_model.predict_one_sequence_beam_search(
+                    input_sequence=test_input_sequences_list[input_sequence_index],
+                    word2index=word2index,
+                    output_max_len=predict_max_len,
+                    k=beam_size)
         else:
             print("predict algorithm {} not exists!!!".format(predict_algorithm))
             return -1
-        predict_sentence = MyDataProcessing.convert_sequence2sentence(sequence=predict_sequence, index2word=index2word)
+        predict_sentence = MyDataProcessing.convert_sequence2sentence(sequence=predict_sequence,
+                                                                      index2word=index2word)
         predict_sentences_list.append(predict_sentence)
     with open(result_path, 'w', newline='', encoding='utf-8') as writer:
         writer.writelines(['QID', ',', 'Prediction', '\n'])
@@ -599,10 +656,10 @@ def start_answer(input_sentence,
                  predict_result=False,
                  test_mode=False):
     seq2seq, word2index, index2word, word2embedding, input_sequences, target_sequences, predict_max_len = get_model(
-        process_original_dataset=process_original_dataset,
-        need_train_word2vec=need_train_word2vector,
-        need_draw_t_sne=need_draw_t_sne,
-        test_mode=test_mode)
+            process_original_dataset=process_original_dataset,
+            need_train_word2vec=need_train_word2vector,
+            need_draw_t_sne=need_draw_t_sne,
+            test_mode=test_mode)
     if load_existed_seq2seq is False or os.path.exists(checkpoint_path) is False:
         sample_size = input_sequences.shape[0]
         train_size = int(sample_size * train_validation_scale)
@@ -632,10 +689,22 @@ def start_answer(input_sentence,
                                                                     predict_algorithm=predict_algorithm)
     print(predict_sentence)
     if predict_result is True:
-        evaluate_seq2seq_model(seq2seq, word2index, index2word, predict_max_len, predict_algorithm, no_padded_cleaned_test_source_path, test_sequences_path, prediction_result_path, test_mode)
+        evaluate_seq2seq_model(seq2seq,
+                               word2index,
+                               index2word,
+                               predict_max_len,
+                               predict_algorithm,
+                               no_padded_cleaned_test_source_path,
+                               test_sequences_path,
+                               prediction_result_path,
+                               test_mode)
     input_words = MyDataProcessing.cut_sentence2words(input_sentence)
     predict_words = MyDataProcessing.cut_sentence2words(predict_sentence)
-    Seq2Seq.plot_attention_weights(attention_weights, input_words, predict_words, font_global, attention_path)
+    Seq2Seq.plot_attention_weights(attention_weights,
+                                   input_words,
+                                   predict_words,
+                                   font_global,
+                                   attention_path)
 
 
 def main():

@@ -13,8 +13,6 @@ from matplotlib import font_manager
 from sklearn.manifold import TSNE
 import time
 import os
-import math
-import copy
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
@@ -344,7 +342,12 @@ def calculate_accuracy(input_sequences, target_sequences, seq2seq_model, word2in
 """
 
 
-def train_seq2seq(seq2seq_model, input_sequences, target_sequences, validation_input_sequences, validation_target_sequences, epoch_numbers):
+def train_seq2seq(seq2seq_model,
+                  input_sequences,
+                  target_sequences,
+                  validation_input_sequences,
+                  validation_target_sequences,
+                  epoch_numbers):
     for epoch in range(epoch_numbers):
         total_loss = 0
         train_accuracy = 0
@@ -480,7 +483,10 @@ def get_word_embedding_and_word2index_and_index2word(word2vector_model, need_dra
     return word_embedding, word2index, index2word
 
 
-def get_model(process_original_dataset=False, need_train_word2vec=False, need_draw_t_sne=False, test_mode=False):
+def get_model(process_original_dataset=False,
+              need_train_word2vec=False,
+              need_draw_t_sne=False,
+              test_mode=False):
     if process_original_dataset is True:
         process_original_dataset_and_save2file()
     word2vec_model = train_and_get_word2vector_model(need_train_word2vec)
@@ -517,17 +523,31 @@ def get_model(process_original_dataset=False, need_train_word2vec=False, need_dr
     return seq2seq_model, word2index, index2word, word_embedding, train_input_sequences, train_target_sequences, target_max_len
 
 
-def start_train(seq2seq_model, train_input_sequences, train_target_sequences, validation_input_sequences, validation_target_sequences, based_trained_seq2seq=False):
+def start_train(seq2seq_model,
+                train_input_sequences,
+                train_target_sequences,
+                validation_input_sequences,
+                validation_target_sequences,
+                based_trained_seq2seq=False,
+                test_mode=False):
     if based_trained_seq2seq is True:
         # load trained checkpoint to train again!
         seq2seq_model.load_trained_checkpoint()
 
-    train_seq2seq(seq2seq_model=seq2seq_model,
-                  input_sequences=train_input_sequences,
-                  target_sequences=train_target_sequences,
-                  validation_input_sequences=validation_input_sequences,
-                  validation_target_sequences=validation_target_sequences,
-                  epoch_numbers=epoch_counts)
+    if test_mode is True:
+        train_seq2seq(seq2seq_model=seq2seq_model,
+                      input_sequences=train_input_sequences,
+                      target_sequences=train_target_sequences,
+                      validation_input_sequences=validation_input_sequences,
+                      validation_target_sequences=validation_target_sequences,
+                      epoch_numbers=10)
+    else:
+        train_seq2seq(seq2seq_model=seq2seq_model,
+                      input_sequences=train_input_sequences,
+                      target_sequences=train_target_sequences,
+                      validation_input_sequences=validation_input_sequences,
+                      validation_target_sequences=validation_target_sequences,
+                      epoch_numbers=epoch_counts)
 
 
 def get_model_and_predict(input_sentence, seq2seq_model, word2index, index2word, predict_max_len, predict_algorithm):
@@ -590,7 +610,13 @@ def start_answer(input_sentence,
         train_target_sequences = target_sequences[:train_size]
         validation_input_sequences = input_sequences[train_size:]
         validation_target_sequences = target_sequences[train_size:]
-        start_train(seq2seq, train_input_sequences, train_target_sequences, validation_input_sequences, validation_target_sequences, based_trained_seq2seq=based_trained_seq2seq)
+        start_train(seq2seq,
+                    train_input_sequences,
+                    train_target_sequences,
+                    validation_input_sequences,
+                    validation_target_sequences,
+                    based_trained_seq2seq=based_trained_seq2seq,
+                    test_mode=test_mode)
         predict_sentence, attention_weights = predict_one_sentence(input_sentence,
                                                                    seq2seq_model=seq2seq,
                                                                    word2index=word2index,
@@ -625,7 +651,7 @@ def main():
                  based_trained_seq2seq=False,
                  process_original_dataset=True,
                  need_train_word2vector=True,
-                 need_draw_t_sne=False,
+                 need_draw_t_sne=True,
                  predict_algorithm='greedy',
                  predict_result=True,
                  test_mode=False)

@@ -509,12 +509,15 @@ def get_word_embedding_and_word2index_and_index2word(word2vector_model,
                                                  word_embedding_path)
     # word_embedding = get_word_embedding_from_file(word_embedding_path)
     if need_draw_t_sne is True:
-        draw_word2vec_by_TSNE(word_embedding,
-                              index2word,
-                              visual_size=len(word_embedding),
-                              fig_size=200,
-                              font=font_global,
-                              t_sne_path=t_sne_path)
+        try:
+            draw_word2vec_by_TSNE(word_embedding,
+                                  index2word,
+                                  visual_size=len(word_embedding),
+                                  fig_size=200,
+                                  font=font_global,
+                                  t_sne_path=t_sne_path)
+        finally:
+            pass
     return word_embedding, word2index, index2word
 
 
@@ -720,7 +723,7 @@ def main():
                  based_trained_seq2seq=False,
                  process_original_dataset=True,
                  need_train_word2vector=True,
-                 need_draw_t_sne=True,
+                 need_draw_t_sne=False,
                  predict_algorithm='greedy',
                  predict_result=True,
                  test_mode=False)

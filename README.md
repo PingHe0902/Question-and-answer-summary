@@ -69,7 +69,7 @@ Question and Answer summary and reasoning
           CBow与Skip-grams不同的是它是固定target word，然后从target word前后选取context来训练word embedding。
 
   - GloVe
-      Glove算法由于其简洁性，也拥有很多的拥簇着，模型公式如下所示：
+      Glove算法由于其简洁性，也拥有很多的拥簇者，模型公式如下所示：
       $$
       min(\sum_{i=1}^{vocabSize} \sum_{j=1}^{vocabSize} f(x_{ij}) (\theta^T e_j + b_i + b_j' - logX_{ij})^2)
       $$
@@ -149,3 +149,39 @@ Question and Answer summary and reasoning
 - 测试模型
   用评估算法评估模型的好坏，传统方法是BLEU分数
 
+模型细节：
+
+process original dataset
+
+![](./Figures/process_original_dataset.png)
+
+baseline Seq2Seq model:
+
+![](./Figures/seq2seq_model_baseline.png)
+
+其中绿色的方框表示RNN单元，可以选择不同的cell unit，比如LSTM或者GRU，蓝色的方框表示word embedding，负责把词转为对应的向量进行计算。
+
+Seq2Seq with attention:
+
+![](./Figures/seq2seq_model_with_attention.png)
+
+attention最后的dense是为了将输出向量的维度变为和word embedding的长度一致，否则无法从对应的word embedding中找出对应的index2word。这一步其实在baseline的模型中也存在，这里只是为了强调注意一下。
+
+**注意事项：**
+
+1. 当写文件的时候，比如使用open函数（传入‘w’参数表示写），要加上newline=‘’参数，否则最后生成的文件里，写的每两行中间都有一个空行。这样在下一次读取文件的时候，就会出现返回参数只有一个，而期望接收的参数却是好几个的报错情况发生（因为这一行是空行，返回值的数量当然只有一个）。
+
+2. 出现`OOM ResourceExhaustedError`的报错信息：有两种情况：
+
+    1. 使用CPU训练：内存不足以容纳当前训练的参数以及数据；
+    2. 使用GPU训练：显存不足以容纳当前训练的参数以及数据。
+
+    解决办法：
+
+    1. 减小batchsize，减少一次输入的数据量；
+    2. 减小网络层数，减少网络参数的量——会改变网络结构，缩小网络；
+    3. 加内存或者换更大显存的显卡
+    
+3. 出现`Backend Qt5Agg is interactive backend. Turning interactive mode on`的报错：
+
+    这是因为调用matplot的时候，使用的`Backend`都是需要GUI的，如果没有GUI的话，需要指定一下，可加上`plt.switch_backend('agg')`.

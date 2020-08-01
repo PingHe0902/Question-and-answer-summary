@@ -1,3 +1,9 @@
+#!/user/bin/python3
+
+# do not use Xwindows backend
+import matplotlib
+matplotlib.use('Agg')
+
 from myUtils.myDataProcessing import MyDataProcessing
 from model_tensorflow.layers import Seq2Seq
 import numpy as np
@@ -48,12 +54,12 @@ workers = cpu_count() * 2
 train_epoches = 100
 # -------------------------------------------------------
 # seq2seq model parameters
-batch_size = 32
+batch_size = 8
 with_attention = True
 cell_type = 'GRU'
 print_batch = True
 dense_units = 512
-epoch_counts = 100
+epoch_counts = 10
 train_validation_scale = 0.95
 beam_size = 5
 # -------------------------------------------------------
@@ -725,7 +731,7 @@ def main():
                  need_train_word2vector=True,
                  need_draw_t_sne=False,
                  predict_algorithm='greedy',
-                 predict_result=True,
+                 predict_result=False,
                  test_mode=False)
 
 

@@ -24,7 +24,7 @@ Question and Answer summary and reasoning
 
       关于如何训练词向量，最开始常用的是Neural language model，首先我们设定一个固定的word Embedding向量E，其维度为（vocabulary_size, word_embedding_dimension）,设定取词窗口w，然后在每句话都按照顺序将每个取词窗口中的词（context）用词向量表示，放入神经网络模型中，其输出结果是该取词窗口的下一个词（target word）。说的可能不清楚，可以看Andrew Ng讲述的图：
 
-      ![](./Figures/Neural language model.png)
+      ![](./Figures/Neural_language_model.png)
 
       另外，context和target word可以有不同的选择，比如：target word的后四个词、target word的前后4个词、后一个词、前一个词、甚至整个句子。训练出来的word embedding模型都会有不同的意义。
 
@@ -185,3 +185,20 @@ attention最后的dense是为了将输出向量的维度变为和word embedding�
 3. 出现`Backend Qt5Agg is interactive backend. Turning interactive mode on`的报错：
 
     这是因为调用matplot的时候，使用的`Backend`都是需要GUI的，如果没有GUI的话，需要指定一下，可加上`plt.switch_backend('agg')`.
+
+4. 出现了类似如下的警告：
+```
+WARNING:tensorflow:Unresolved object in checkpoint: (root).optimizer.iter
+2020-08-05 21:40:17,459 : WARNING : Unresolved object in checkpoint: (root).optimizer.iter
+WARNING:tensorflow:Unresolved object in checkpoint: (root).optimizer.beta_1
+2020-08-05 21:40:17,459 : WARNING : Unresolved object in checkpoint: (root).optimizer.beta_1
+WARNING:tensorflow:Unresolved object in checkpoint: (root).optimizer.beta_2
+2020-08-05 21:40:17,459 : WARNING : Unresolved object in checkpoint: (root).optimizer.beta_2
+WARNING:tensorflow:Unresolved object in checkpoint: (root).optimizer.decay
+2020-08-05 21:40:17,459 : WARNING : Unresolved object in checkpoint: (root).optimizer.decay
+WARNING:tensorflow:Unresolved object in checkpoint: (root).optimizer.learning_rate
+2020-08-05 21:40:17,459 : WARNING : Unresolved object in checkpoint: (root).optimizer.learning_rate
+WARNING:tensorflow:A checkpoint was restored (e.g. tf.train.Checkpoint.restore or tf.keras.Model.load_weights) but not all checkpointed values were used. See above for specific issues. Use expect_partial() on the load status object, e.g. tf.train.Checkpoint.restore(...).expect_partial(), to silence these warnings, or use assert_consumed() to make the check explicit. See https://www.tensorflow.org/alpha/guide/checkpoints#loading_mechanics for details.
+2020-08-05 21:40:17,459 : WARNING : A checkpoint was restored (e.g. tf.train.Checkpoint.restore or tf.keras.Model.load_weights) but not all checkpointed values were used. See above for specific issues. Use expect_partial() on the load status object, e.g. tf.train.Checkpoint.restore(...).expect_partial(), to silence these warnings, or use assert_consumed() to make the check explicit. See https://www.tensorflow.org/alpha/guide/checkpoints#loading_mechanics for details.
+```
+这个警告主要是说我们没有全部使用checkpoint中所有的变量，因为我们是在predict，predict的过程中是不需要使用用于训练的optimizer参数的，所以在predict的过程中报这个警告的话不用担心。

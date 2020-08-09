@@ -3,10 +3,12 @@ import numpy as np
 from multiprocessing import cpu_count, Pool
 import jieba
 import re
+import os
 
-#jieba.load_userdict("/home/heping/pycharm/aistudio/project1_auto_master_qa/resource/jieba_dictionary/user_dict.txt")
-jieba.load_userdict("./resource/jieba_dictionary/user_dict.txt")
 
+WORK_PATH = os.getcwd()
+JIEBA_DICT_PATH = os.path.join(WORK_PATH, 'resource/jieba_dictionary/user_dict.txt')
+jieba.load_userdict(JIEBA_DICT_PATH)
 
 class MyDataProcessing:
 

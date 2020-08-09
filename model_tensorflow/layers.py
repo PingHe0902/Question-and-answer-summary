@@ -3,6 +3,7 @@ import numpy as np
 import os
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
+import copy
 
 
 class Encoder(tf.keras.Model):
@@ -574,7 +575,8 @@ class Seq2Seq(tf.keras.Model):
             # print(output_word_index)
             # print("=============")
             if word2index['<END>'] == output_word_index:
-                return output_word_indexes, attention_weights_array
+                # output_word_indexes[:-1] means not return "<END>" character
+                return output_word_indexes[:-1], attention_weights_array
 
             decoder_input_x = tf.expand_dims(output_word_index, 0)
         return output_word_indexes, attention_weights_array
@@ -629,29 +631,28 @@ class Seq2Seq(tf.keras.Model):
                         prob + np.log(y_hat[0][output_beam[k_index]]),
                         predict_sent + [output_beam[k_index]]
                     )]
-            # sort all k_beam to get k's biggest prob predict sequences
-            k_beam = sorted(all_k_beams)[-k:]
+            # sorted by first parameter, i.e. prob
+            all_k_beams = sorted(all_k_beams, key=lambda x: x[0])
             # if the most prob prediction meet '<END>', then return
-            if (int(k_beam[-1][-1][-1]) - int(word2index['<END>'])) is 0:
-                # d = k_beam
-                # print("d: {}".format(d))
-                # a = k_beam[-1][-1][:-1]
-                # print("a: {}".format(a))
-                if k_beam[-1][-1][-1] is not k_beam[-1][-1][0]:
-                    return k_beam[-1][-1][:-1], attention_weights_array_vocab[str(k_beam[-1][-1][-2])], k_beam
+            if (int(all_k_beams[-1][-1][-1]) - int(word2index['<END>'])) is 0:
+                if all_k_beams[-1][-1][-1] is not all_k_beams[-1][-1][0]:
+                    # all_k_beams[-1][-1][:-1] means not return "<END>" character
+                    return all_k_beams[-1][-1][:-1], attention_weights_array_vocab[str(all_k_beams[-1][-1][-2])], all_k_beams[-k:]
                 else:
-                    return k_beam[-2][-1], attention_weights_array_vocab[str(decoder_input_x.numpy()[0][0])], k_beam
+                    return all_k_beams[-2][-1], attention_weights_array_vocab[str(decoder_input_x.numpy()[0][0])], all_k_beams[-k:]
             else:
-                # else let's remove other prediction ended with '<END>', because continue to predict them are useless.
-                sub_k_beam = k_beam[:-1]
+                # else let's remove other prediction ended with '<END>', because those sentences are not most prob sentence, and continue to predict them are useless.
+                sub_k_beam = copy.deepcopy(all_k_beams[:-1])
                 while sub_k_beam:
                     sub_prob, sub_predict_sent = sub_k_beam.pop()
                     index = len(sub_k_beam)
                     if (int(sub_predict_sent[-1]) - int(word2index['<END>'])) is 0:
-                        k_beam.pop(index)
+                        all_k_beams.pop(index)
+            # sort all k_beam to get k's biggest prob predict sequences
+            k_beam = sorted(all_k_beams)[-k:]
 
-        # output_word must be one biggest prob predict sequences selected from k_beam
-        output_word_indexes = sorted(k_beam)[-1][-1]
+        # if not meed "<END>", then return the whole predicted most likely sentence
+        output_word_indexes = k_beam[-1][-1]
         # print(output_word_indexes)
         return output_word_indexes, attention_weights_array_vocab[str(output_word_indexes[-2])], k_beam
 
